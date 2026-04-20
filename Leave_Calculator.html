@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>حاسبة اجازات الموظفين</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#f7f8fb;
+      --bg2:#eef2f7;
+      --card:#ffffffcc;
+      --cardSolid:#ffffff;
+      --stroke:#0f172a14;
+      --text:#0f172a;
+      --muted:#475569;
+      --accent:#2b6cb0;
+      --warn:#b45309;
+      --warnBg:#fff7ed;
+      --shadow: 0 12px 34px rgba(2,6,23,.08);
+      --radius: 18px;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family:"Cairo", system-ui, -apple-system, "Segoe UI", Tahoma, Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(900px 420px at 85% 0%, rgba(43,108,176,.09), transparent 60%),
+        radial-gradient(850px 420px at 12% 95%, rgba(47,133,90,.07), transparent 60%),
+        linear-gradient(180deg, var(--bg), var(--bg2));
+      min-height:100vh;
+    }
+
+    header{
+      position: sticky;
+      top: 0;
+      z-index: 999;
+      background: rgba(255,255,255,.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--stroke);
+      box-shadow: var(--shadow);
+    }
+
+    .header-inner{
+      max-width: 1150px;
+      margin: 0 auto;
+      padding: 12px 18px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      direction: ltr; /* ثابت دائمًا لضمان أن قائمة اللغة تكون أقصى اليسار */
+      gap: 10px;
+    }
+
+    .lang-box{justify-self: start;}
+    .title-box{justify-self: center;}
+    .spacer{justify-self: end;}
+
+    h1{
+      margin:0;
+      font-size:1.35rem;
+      font-weight:800;
+      color: var(--accent);
+      white-space: nowrap;
+      text-align:center;
+    }
+
+    .lang-select{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border-radius:12px;
+      border:1px solid rgba(15,23,42,.15);
+      background:white;
+      font-weight:800;
+      color: var(--text);
+    }
+
+    .lang-select select{
+      border:none;
+      outline:none;
+      font-family:inherit;
+      font-weight:800;
+      background:none;
+      cursor:pointer;
+      color: var(--text);
+      padding: 2px 0;
+    }
+
+    .container{
+      max-width:1150px;
+      margin: 0 auto;
+      padding: 16px 14px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
+    main{display:flex; flex-direction:column; gap:14px;}
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      backdrop-filter: blur(8px);
+    }
+
+    .card .title{
+      padding: 12px 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.80));
+      border-bottom: 1px solid var(--stroke);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .card .title h2{margin:0; font-size: 1.05rem; font-weight:900;}
+    .card .content{padding: 14px;}
+
+    .small{font-size:.85rem; color:#64748b; font-weight:800;}
+    .hint{margin-top:6px; font-size:.86rem; color:#64748b; line-height:1.5;}
+
+    label{display:block; font-size:.92rem; color:var(--muted); margin-bottom:6px; font-weight:800;}
+
+    input, textarea{
+      width:100%;
+      padding: 11px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(15,23,42,.14);
+      background: var(--cardSolid);
+      color: var(--text);
+      outline:none;
+      transition: border .15s ease, box-shadow .15s ease, background .15s ease;
+      font-family:inherit;
+    }
+
+    input:focus, textarea:focus{
+      border-color: rgba(43,108,176,.55);
+      box-shadow: 0 0 0 4px rgba(43,108,176,.10);
+      background:#fbfdff;
+    }
+
+    input:disabled{
+      background:#f1f5f9;
+      color:#64748b;
+      border-color:#e2e8f0;
+      cursor:not-allowed;
+    }
+
+    .invalid{
+      border-color: rgba(185,28,28,.55) !important;
+      box-shadow: 0 0 0 4px rgba(185,28,28,.10) !important;
+      background: #fff5f5 !important;
+    }
+
+    .alert{
+      display:none;
+      margin-top:10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(180,83,9,.25);
+      background: var(--warnBg);
+      color: #7c2d12;
+      font-weight:900;
+      line-height:1.5;
+    }
+
+    .block{
+      padding: 12px 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(15,23,42,.12);
+      background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(255,255,255,.84));
+    }
+
+    .block h3{margin:0 0 10px; font-size:1rem; font-weight:900;}
+
+    .data-top-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:start;}
+    @media (max-width: 860px){ .data-top-grid{grid-template-columns:1fr;} }
+
+    .stack{display:flex; flex-direction:column; gap:12px;}
+
+    .seg{
+      display:flex;
+      gap:10px;
+      padding: 10px 10px;
+      border:1px solid rgba(15,23,42,.14);
+      background:var(--cardSolid);
+      border-radius: 14px;
+      align-items:center;
+      justify-content:space-between;
+    }
+
+    .seg .opt{display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none; font-weight:900;}
+    .seg input[type="radio"]{width:auto; accent-color: var(--accent);}
+
+    .holiday-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+    @media (max-width: 860px){ .holiday-grid{grid-template-columns:1fr;} }
+
+    .holiday-block{
+      padding: 12px;
+      border-radius: 16px;
+      border:1px dashed rgba(15,23,42,.18);
+      background: rgba(43,108,176,.04);
+    }
+
+    .holiday-check{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      font-weight:900;
+      cursor:pointer;
+      margin-bottom:6px;
+    }
+
+    .holiday-check input{width:auto; accent-color: var(--warn);}
+
+    .btns{display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px;}
+
+    button{
+      border:none;
+      border-radius: 14px;
+      padding: 11px 14px;
+      cursor:pointer;
+      font-weight:900;
+      color:white;
+      background: linear-gradient(90deg, var(--accent), rgba(43,108,176,.85));
+      box-shadow: 0 10px 18px rgba(43,108,176,.18);
+      transition: transform .08s ease, opacity .12s ease;
+    }
+
+    button:active{transform: translateY(1px);}
+    button:disabled{opacity:.55; cursor:not-allowed;}
+
+    .secondary{background: linear-gradient(90deg, #94a3b8, #64748b); box-shadow:none;}
+    .success{background: linear-gradient(90deg, #16a34a, #22c55e); box-shadow: 0 10px 18px rgba(34,197,94,.18);}
+
+    .results-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+    @media (max-width: 860px){ .results-grid{grid-template-columns:1fr;} }
+
+    .pill{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding: 11px 12px;
+      border: 1px solid rgba(15,23,42,.12);
+      border-radius: 14px;
+      background: var(--cardSolid);
+    }
+
+    .pill .k{color:var(--muted); font-size:.92rem; font-weight:900}
+    .pill .v{font-weight:900; font-size: .98rem; direction:ltr; text-align:left;}
+    .pill .v.ar{direction:rtl; text-align:right;}
+
+    .mono{font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+
+    footer{text-align:center; color:#64748b; font-size:.9rem; padding: 10px 10px;}
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="lang-box">
+      <div class="lang-select" title="Language">
+        <span aria-hidden="true">🌐</span>
+        <select id="langSelect" aria-label="Language">
+          <option value="ar">عربي</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+    </div>
+    <div class="title-box">
+      <h1 id="appTitle">حاسبة اجازات الموظفين</h1>
+    </div>
+    <div class="spacer"></div>
+  </div>
+</header>
+
+<div class="container">
+  <main>
+    <section class="card">
+      <div class="title">
+        <h2 data-i18n="section_data">البيانات</h2>
+        <div class="small" data-i18n="note_inclusive">الحساب شامل يوم البداية والنهاية</div>
+      </div>
+      <div class="content">
+
+        <div class="data-top-grid">
+          <div class="block">
+            <h3 data-i18n="sec_balance">١) رصيد الإجازات</h3>
+            <div>
+              <label for="currentBalance" data-i18n="lbl_balance">الرصيد الحالي (يوم)</label>
+              <input id="currentBalance" type="number" min="0" step="1" data-i18n-placeholder="ph_balance" placeholder="مثال: 30" />
+            </div>
+            <div style="margin-top:10px">
+              <label for="manualHolidayCredit" data-i18n="lbl_manual_credit">إضافة رصيد عطلات رسمية (يدوي) (يوم)</label>
+              <input id="manualHolidayCredit" type="number" min="0" step="1" value="0" />
+            </div>
+            <div id="balanceAlert" class="alert"></div>
+          </div>
+
+          <div class="stack">
+            <div class="block">
+              <h3 data-i18n="sec_shift">٢) نظام الدوام</h3>
+              <div class="seg" role="group" aria-label="Shift">
+                <label class="opt"><input type="radio" name="shiftType" value="morning" checked><span data-i18n="shift_morning">صباحي</span></label>
+                <label class="opt"><input type="radio" name="shiftType" value="shifts"><span data-i18n="shift_shifts">نوبات</span></label>
+              </div>
+            </div>
+
+            <div class="block">
+              <h3 data-i18n="sec_official">٣) الإجازة الرسمية</h3>
+              <div>
+                <label for="startDate" data-i18n="lbl_start">تاريخ بداية الإجازة</label>
+                <input id="startDate" type="date" />
+                <div class="hint"><span data-i18n="lbl_day">اليوم</span>: <span id="startWeekday" class="mono">—</span></div>
+              </div>
+              <div style="margin-top:10px">
+                <label for="requestedDays" data-i18n="lbl_days_requested">عدد أيام الإجازة المطلوبة</label>
+                <input id="requestedDays" type="number" min="1" step="1" data-i18n-placeholder="ph_days" placeholder="مثال: 6" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="block" style="margin-top:12px;">
+          <h3 data-i18n="sec_holidays">٤) العطلات الرسمية داخل نطاق الإجازة الرسمية</h3>
+          <div class="holiday-grid" style="margin-top:10px;">
+            <div class="holiday-block">
+              <label class="holiday-check"><input id="startIsOfficialHoliday" type="checkbox" /><span data-i18n="holiday_start">عطلة رسمية عند بداية الإجازة</span></label>
+              <div class="small" data-i18n="holiday_start_hint">مثلاً يبدأ الموظف إجازته في يوم عيد.</div>
+              <div style="margin-top:10px">
+                <label for="startHolidayDays" data-i18n="lbl_holiday_days">عدد الأيام</label>
+                <input id="startHolidayDays" type="number" min="0" step="1" value="0" disabled />
+              </div>
+            </div>
+            <div class="holiday-block">
+              <label class="holiday-check"><input id="endIsOfficialHoliday" type="checkbox" /><span data-i18n="holiday_end">عطلة رسمية عند نهاية الإجازة</span></label>
+              <div class="small" data-i18n="holiday_end_hint">مثلاً تنتهي الإجازة في يوم عيد.</div>
+              <div style="margin-top:10px">
+                <label for="endHolidayDays" data-i18n="lbl_holiday_days">عدد الأيام</label>
+                <input id="endHolidayDays" type="number" min="0" step="1" value="0" disabled />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="btns">
+          <button id="calcBtn" data-i18n="btn_calc">احسب الآن</button>
+          <button id="maxBtn" type="button" class="success" data-i18n="btn_max">احسب أقصى مدة ممكنة للإجازة</button>
+          <button id="resetBtn" class="secondary" type="button" data-i18n="btn_reset">مسح البيانات</button>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="title">
+        <h2 data-i18n="section_results">النتائج</h2>
+        <div class="small" data-i18n="note_results_layout">الإجازة الرسمية + الفعلية جنب بعض، ثم الرصيد + التصدير</div>
+      </div>
+      <div class="content">
+        <div class="results-grid">
+          <div class="block">
+            <h3 data-i18n="res_official_title">الإجازة الرسمية (ضمن الرصيد)</h3>
+            <div class="pill"><div class="k" data-i18n="res_official_start">بداية رسمية</div><div class="v ar" id="officialStartOut">—</div></div>
+            <div class="pill"><div class="k" data-i18n="res_official_end">نهاية رسمية</div><div class="v ar" id="officialEndOut">—</div></div>
+            <div class="pill"><div class="k" data-i18n="res_official_days">عدد أيام الإجازة الرسمية</div><div class="v mono" id="officialDaysOut">—</div></div>
+            <div class="pill"><div class="k" data-i18n="res_fridays">أيام الجمع داخل الرسمية</div><div class="v mono" id="fridaysInOfficialOut">—</div></div>
+            <div class="pill"><div class="k" data-i18n="res_holidays">العطلات الرسمية داخل الرسمية</div><div class="v mono" id="officialHolidaysOut">—</div></div>
+            <div class="pill"><div class="k" data-i18n="res_deducted">الأيام المخصومة من الرصيد</div><div class="v mono" id="deductedDaysOut">—</div></div>
+          </div>
+
+          <div class="block">
+            <h3 data-i18n="res_actual_title">الإجازة الفعلية</h3>
+            <div class="pill"><div class="k" data-i18n="res_actual_start">بداية فعلية</div><div class="v ar" id="actualStartOut">—</div></div>
+            <div class="pill"><div class="k" data-i18n="res_actual_end">نهاية فعلية</div><div class="v ar" id="actualEndOut">—</div></div>
+            <div class="pill"><div class="k" data-i18n="res_actual_days">عدد أيام الإجازة الفعلية</div><div class="v mono" id="actualDaysOut">—</div></div>
+          </div>
+
+          <div class="block">
+            <h3 data-i18n="res_balance_title">الرصيد</h3>
+            <div class="pill"><div class="k" data-i18n="res_available">الرصيد المتاح للحساب (الحالي + الإضافة)</div><div class="v mono" id="balanceNowOut">—</div></div>
+            <div class="pill"><div class="k" data-i18n="res_manual">قيمة الإضافة اليدوية</div><div class="v mono" id="manualCreditOut">—</div></div>
+            <div class="pill"><div class="k" data-i18n="res_new_balance">الرصيد الجديد بعد الخصم</div><div class="v mono" id="balanceNewOut">—</div></div>
+          </div>
+
+          <div class="block">
+            <h3 data-i18n="res_export_title">التصدير / الملخص</h3>
+            <textarea id="summaryBox" rows="9" data-i18n-placeholder="ph_summary" placeholder="سيظهر الملخص هنا بعد الحساب..."></textarea>
+            <div class="btns" style="margin-top:10px">
+              <button type="button" id="copyBtn" data-i18n="btn_copy">نسخ الملخص</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer></footer>
+</div>
+
+<script>
+  const MS_DAY = 24*60*60*1000;
+
+  const translations = {
+    ar: {
+      app_title: 'حاسبة اجازات الموظفين',
+      section_data: 'البيانات',
+      section_results: 'النتائج',
+      note_inclusive: 'الحساب شامل يوم البداية والنهاية',
+      note_results_layout: 'الإجازة الرسمية + الفعلية جنب بعض، ثم الرصيد + التصدير',
+      sec_balance: '١) رصيد الإجازات',
+      lbl_balance: 'الرصيد الحالي (يوم)',
+      ph_balance: 'مثال: 30',
+      lbl_manual_credit: 'إضافة رصيد عطلات رسمية (يدوي) (يوم)',
+      sec_shift: '٢) نظام الدوام',
+      shift_morning: 'صباحي',
+      shift_shifts: 'نوبات',
+      sec_official: '٣) الإجازة الرسمية',
+      lbl_start: 'تاريخ بداية الإجازة',
+      lbl_day: 'اليوم',
+      lbl_days_requested: 'عدد أيام الإجازة المطلوبة',
+      ph_days: 'مثال: 6',
+      sec_holidays: '٤) العطلات الرسمية داخل نطاق الإجازة الرسمية',
+      holiday_start: 'عطلة رسمية عند بداية الإجازة',
+      holiday_end: 'عطلة رسمية عند نهاية الإجازة',
+      holiday_start_hint: 'مثلاً يبدأ الموظف إجازته في يوم عيد.',
+      holiday_end_hint: 'مثلاً تنتهي الإجازة في يوم عيد.',
+      lbl_holiday_days: 'عدد الأيام',
+      btn_calc: 'احسب الآن',
+      btn_max: 'احسب أقصى مدة ممكنة للإجازة',
+      btn_reset: 'مسح البيانات',
+      btn_copy: 'نسخ الملخص',
+      ph_summary: 'سيظهر الملخص هنا بعد الحساب...',
+      res_official_title: 'الإجازة الرسمية (ضمن الرصيد)',
+      res_official_start: 'بداية رسمية',
+      res_official_end: 'نهاية رسمية',
+      res_official_days: 'عدد أيام الإجازة الرسمية',
+      res_fridays: 'أيام الجمع داخل الرسمية',
+      res_holidays: 'العطلات الرسمية داخل الرسمية',
+      res_deducted: 'الأيام المخصومة من الرصيد',
+      res_actual_title: 'الإجازة الفعلية',
+      res_actual_start: 'بداية فعلية',
+      res_actual_end: 'نهاية فعلية',
+      res_actual_days: 'عدد أيام الإجازة الفعلية',
+      res_balance_title: 'الرصيد',
+      res_available: 'الرصيد المتاح للحساب (الحالي + الإضافة)',
+      res_manual: 'قيمة الإضافة اليدوية',
+      res_new_balance: 'الرصيد الجديد بعد الخصم',
+      res_export_title: 'التصدير / الملخص',
+      alert_enter_balance: '⚠️ أدخل الرصيد الحالي أولاً قبل حساب الإجازة.',
+      alert_enter_start: '⚠️ أدخل تاريخ بداية الإجازة حتى يتم احتساب أيام الجمع والعطلات بشكل صحيح.',
+      alert_bad_start: '⚠️ أدخل تاريخ بداية الإجازة بشكل صحيح.',
+      alert_not_allowed: (ded, avail) => `⚠️ غير مسموح: الأيام المخصومة فعليًا (${ded}) أكبر من الرصيد المتاح (${avail}).`,
+      alert_enter_balance_only: '⚠️ أدخل الرصيد الحالي أولاً.',
+      alert_enter_start_only: '⚠️ أدخل تاريخ بداية الإجازة أولاً.',
+      alert_no_solution: '⚠️ لا يمكن إيجاد مدة مناسبة بناءً على البيانات الحالية.',
+      copied: 'تم النسخ ✓',
+      copy: 'نسخ الملخص'
+    },
+    en: {
+      app_title: 'Employee Leave Calculator',
+      section_data: 'Inputs',
+      section_results: 'Results',
+      note_inclusive: 'All calculations are inclusive of start and end dates',
+      note_results_layout: 'Official vs Actual side-by-side, then Balance + Summary',
+      sec_balance: '1) Leave Balance',
+      lbl_balance: 'Current balance (days)',
+      ph_balance: 'e.g., 30',
+      lbl_manual_credit: 'Manual public holiday credit (days)',
+      sec_shift: '2) Work schedule',
+      shift_morning: 'Morning',
+      shift_shifts: 'Shifts',
+      sec_official: '3) Official leave',
+      lbl_start: 'Leave start date',
+      lbl_day: 'Day',
+      lbl_days_requested: 'Requested leave days',
+      ph_days: 'e.g., 6',
+      sec_holidays: '4) Official holidays within official leave',
+      holiday_start: 'Holiday at leave start',
+      holiday_end: 'Holiday at leave end',
+      holiday_start_hint: 'Example: the leave starts on an Eid holiday.',
+      holiday_end_hint: 'Example: the leave ends on an Eid holiday.',
+      lbl_holiday_days: 'Number of days',
+      btn_calc: 'Calculate',
+      btn_max: 'Calculate maximum possible leave',
+      btn_reset: 'Reset',
+      btn_copy: 'Copy summary',
+      ph_summary: 'Summary will appear here after calculation...',
+      res_official_title: 'Official leave (charged)',
+      res_official_start: 'Official start',
+      res_official_end: 'Official end',
+      res_official_days: 'Requested days (calendar)',
+      res_fridays: 'Fridays within official range',
+      res_holidays: 'Official holidays within official range',
+      res_deducted: 'Days deducted from balance',
+      res_actual_title: 'Actual leave',
+      res_actual_start: 'Actual start',
+      res_actual_end: 'Actual end',
+      res_actual_days: 'Actual days',
+      res_balance_title: 'Balance',
+      res_available: 'Available balance (current + credit)',
+      res_manual: 'Manual credit',
+      res_new_balance: 'New balance',
+      res_export_title: 'Summary',
+      alert_enter_balance: '⚠️ Enter the current balance first.',
+      alert_enter_start: '⚠️ Enter the leave start date to calculate Fridays/holidays correctly.',
+      alert_bad_start: '⚠️ Enter a valid start date.',
+      alert_not_allowed: (ded, avail) => `⚠️ Not allowed: deducted days (${ded}) exceed available balance (${avail}).`,
+      alert_enter_balance_only: '⚠️ Enter the current balance first.',
+      alert_enter_start_only: '⚠️ Enter the leave start date first.',
+      alert_no_solution: '⚠️ Unable to find a valid maximum duration with the current inputs.',
+      copied: 'Copied ✓',
+      copy: 'Copy summary'
+    }
+  };
+
+  let currentLang = 'ar';
+  let currentLocale = 'ar-KW';
+
+  function t(key){
+    const v = translations[currentLang][key];
+    return v === undefined ? key : v;
+  }
+
+  function setLanguage(lang){
+    currentLang = lang;
+    currentLocale = (lang === 'ar') ? 'ar-KW' : 'en-GB';
+    document.documentElement.lang = lang;
+    document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+    document.title = t('app_title');
+    document.getElementById('appTitle').textContent = t('app_title');
+
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      el.textContent = t(key);
+    });
+
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+      const key = el.getAttribute('data-i18n-placeholder');
+      el.setAttribute('placeholder', t(key));
+    });
+
+    const d = parseDateYYYYMMDD(document.getElementById('startDate').value);
+    document.getElementById('startWeekday').textContent = d ? fmtWeekday(d) : '—';
+
+    if(currentLang === 'ar'){
+      document.querySelectorAll('.pill .v').forEach(v => v.classList.add('ar'));
+    } else {
+      document.querySelectorAll('.pill .v').forEach(v => v.classList.remove('ar'));
+    }
+
+    softValidate();
+    if(startDateEl.value && requestedDaysEl.value && !calcBtn.disabled) calculate();
+  }
+
+  function fmtWeekday(dt){
+    return new Intl.DateTimeFormat(currentLocale, { weekday:'long', timeZone:'UTC' }).format(dt);
+  }
+  function fmtDate(dt){
+    return new Intl.DateTimeFormat(currentLocale, { year:'numeric', month:'2-digit', day:'2-digit', timeZone:'UTC' }).format(dt);
+  }
+  function fmtDateLine(dt){
+    return `${fmtWeekday(dt)} • ${fmtDate(dt)} • (${toISODateUTC(dt)})`;
+  }
+
+  function parseDateYYYYMMDD(v){
+    if(!v) return null;
+    const [y,m,d] = v.split('-').map(Number);
+    if(!y||!m||!d) return null;
+    return new Date(Date.UTC(y, m-1, d));
+  }
+  function toISODateUTC(dt){
+    const y = dt.getUTCFullYear();
+    const m = String(dt.getUTCMonth()+1).padStart(2,'0');
+    const d = String(dt.getUTCDate()).padStart(2,'0');
+    return `${y}-${m}-${d}`;
+  }
+  function addDaysUTC(dt, n){ return new Date(dt.getTime() + n*MS_DAY); }
+  function diffDaysInclusiveUTC(a,b){ return Math.round((b-a)/MS_DAY) + 1; }
+  function countWeekdayInRangeUTC(start, end, weekdayIndex){
+    let count = 0;
+    for(let cur = new Date(start); cur <= end; cur = addDaysUTC(cur, 1)){
+      if(cur.getUTCDay() === weekdayIndex) count++;
+    }
+    return count;
+  }
+  function clampInt(x, min=0){ x = Number.isFinite(x) ? Math.trunc(x) : 0; return Math.max(min, x); }
+
+  const langSelect = document.getElementById('langSelect');
+  const startDateEl = document.getElementById('startDate');
+  const requestedDaysEl = document.getElementById('requestedDays');
+  const startWeekdayEl = document.getElementById('startWeekday');
+  const currentBalanceEl = document.getElementById('currentBalance');
+  const manualHolidayCreditEl = document.getElementById('manualHolidayCredit');
+  const balanceAlertEl = document.getElementById('balanceAlert');
+
+  const startIsOfficialHolidayEl = document.getElementById('startIsOfficialHoliday');
+  const endIsOfficialHolidayEl = document.getElementById('endIsOfficialHoliday');
+  const startHolidayDaysEl = document.getElementById('startHolidayDays');
+  const endHolidayDaysEl = document.getElementById('endHolidayDays');
+
+  const calcBtn = document.getElementById('calcBtn');
+  const maxBtn = document.getElementById('maxBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const copyBtn = document.getElementById('copyBtn');
+
+  const out = {
+    officialStartOut: document.getElementById('officialStartOut'),
+    officialEndOut: document.getElementById('officialEndOut'),
+    officialDaysOut: document.getElementById('officialDaysOut'),
+    fridaysInOfficialOut: document.getElementById('fridaysInOfficialOut'),
+    officialHolidaysOut: document.getElementById('officialHolidaysOut'),
+    deductedDaysOut: document.getElementById('deductedDaysOut'),
+    actualStartOut: document.getElementById('actualStartOut'),
+    actualEndOut: document.getElementById('actualEndOut'),
+    actualDaysOut: document.getElementById('actualDaysOut'),
+    balanceNowOut: document.getElementById('balanceNowOut'),
+    manualCreditOut: document.getElementById('manualCreditOut'),
+    balanceNewOut: document.getElementById('balanceNewOut'),
+    summaryBox: document.getElementById('summaryBox')
+  };
+
+  function getShiftType(){
+    return document.querySelector('input[name="shiftType"]:checked')?.value || 'morning';
+  }
+
+  function showAlert(msg){
+    balanceAlertEl.style.display = 'block';
+    balanceAlertEl.textContent = msg;
+  }
+  function hideAlert(){
+    balanceAlertEl.style.display = 'none';
+    balanceAlertEl.textContent = '';
+  }
+
+  langSelect.addEventListener('change', () => setLanguage(langSelect.value));
+
+  startDateEl.addEventListener('input', () => {
+    const d = parseDateYYYYMMDD(startDateEl.value);
+    startWeekdayEl.textContent = d ? fmtWeekday(d) : '—';
+    softValidate();
+    if(startDateEl.value && requestedDaysEl.value && !calcBtn.disabled) calculate();
+  });
+
+  function syncHolidayInputs(){
+    startHolidayDaysEl.disabled = !startIsOfficialHolidayEl.checked;
+    endHolidayDaysEl.disabled = !endIsOfficialHolidayEl.checked;
+    if(!startIsOfficialHolidayEl.checked) startHolidayDaysEl.value = '0';
+    if(!endIsOfficialHolidayEl.checked) endHolidayDaysEl.value = '0';
+  }
+
+  startIsOfficialHolidayEl.addEventListener('change', () => {
+    syncHolidayInputs();
+    softValidate();
+    if(startDateEl.value && requestedDaysEl.value && !calcBtn.disabled) calculate();
+  });
+  endIsOfficialHolidayEl.addEventListener('change', () => {
+    syncHolidayInputs();
+    softValidate();
+    if(startDateEl.value && requestedDaysEl.value && !calcBtn.disabled) calculate();
+  });
+  syncHolidayInputs();
+
+  function clearOutputs(){
+    Object.values(out).forEach(el => {
+      if(!el) return;
+      if(el.tagName === 'TEXTAREA') el.value = '';
+      else el.textContent = '—';
+    });
+  }
+
+  function getAvailableBalance(){
+    const curRaw = parseFloat(currentBalanceEl.value);
+    const cur = Number.isFinite(curRaw) ? clampInt(curRaw, 0) : null;
+    const addRaw = parseFloat(manualHolidayCreditEl.value);
+    const add = Number.isFinite(addRaw) ? clampInt(addRaw, 0) : 0;
+    return {cur, add, total: (cur === null ? null : (cur + add))};
+  }
+
+  function computeEffectiveDeduction(officialStart, requestedDays){
+    const officialEnd = addDaysUTC(officialStart, requestedDays - 1);
+    const hStart = startIsOfficialHolidayEl.checked ? clampInt(parseFloat(startHolidayDaysEl.value), 0) : 0;
+    const hEnd = endIsOfficialHolidayEl.checked ? clampInt(parseFloat(endHolidayDaysEl.value), 0) : 0;
+    const officialHolidayDays = hStart + hEnd;
+    const fridaysInOfficial = countWeekdayInRangeUTC(officialStart, officialEnd, 5);
+    const deductedEffective = Math.max(requestedDays - fridaysInOfficial - officialHolidayDays, 0);
+    return {officialEnd, hStart, hEnd, officialHolidayDays, fridaysInOfficial, deductedEffective};
+  }
+
+  function softValidate(){
+    const requested = clampInt(parseFloat(requestedDaysEl.value), 0);
+    const bal = getAvailableBalance();
+
+    requestedDaysEl.classList.remove('invalid');
+    currentBalanceEl.classList.remove('invalid');
+    hideAlert();
+
+    if(requested > 0 && bal.cur === null){
+      currentBalanceEl.classList.add('invalid');
+      showAlert(t('alert_enter_balance'));
+      calcBtn.disabled = true;
+      maxBtn.disabled = true;
+      return false;
+    }
+
+    if(requested > 0 && !startDateEl.value){
+      showAlert(t('alert_enter_start'));
+      calcBtn.disabled = true;
+      maxBtn.disabled = true;
+      return false;
+    }
+
+    if(bal.total === null){
+      calcBtn.disabled = false;
+      maxBtn.disabled = true;
+      return true;
+    }
+
+    maxBtn.disabled = false;
+
+    if(requested > 0){
+      const officialStart = parseDateYYYYMMDD(startDateEl.value);
+      if(!officialStart){
+        showAlert(t('alert_bad_start'));
+        calcBtn.disabled = true;
+        return false;
+      }
+      const eff = computeEffectiveDeduction(officialStart, requested);
+      if(eff.deductedEffective > bal.total){
+        requestedDaysEl.classList.add('invalid');
+        currentBalanceEl.classList.add('invalid');
+        showAlert(translations[currentLang].alert_not_allowed(eff.deductedEffective, bal.total));
+        calcBtn.disabled = true;
+        return false;
+      }
+    }
+
+    calcBtn.disabled = false;
+    return true;
+  }
+
+  function calculate(){
+    if(!softValidate()) return;
+
+    const shiftType = getShiftType();
+    const officialStart = parseDateYYYYMMDD(startDateEl.value);
+    const requestedDays = clampInt(parseFloat(requestedDaysEl.value), 1);
+    if(!officialStart || !requestedDays){ clearOutputs(); return; }
+
+    const eff = computeEffectiveDeduction(officialStart, requestedDays);
+
+    let actualStart = new Date(officialStart);
+    let actualEnd = new Date(eff.officialEnd);
+
+    if(shiftType === 'shifts'){
+      actualStart = addDaysUTC(actualStart, -2);
+    } else {
+      if(officialStart.getUTCDay() === 0) actualStart = addDaysUTC(actualStart, -3);
+      if(eff.officialEnd.getUTCDay() === 4) actualEnd = addDaysUTC(actualEnd, 2);
+    }
+
+    if(eff.hStart) actualStart = addDaysUTC(actualStart, -eff.hStart);
+    if(eff.hEnd) actualEnd = addDaysUTC(actualEnd, +eff.hEnd);
+
+    if(eff.hEnd > 0){
+      const holidayEnd = addDaysUTC(eff.officialEnd, eff.hEnd);
+      if(holidayEnd.getUTCDay() === 4){
+        actualEnd = addDaysUTC(actualEnd, 2);
+      }
+    }
+
+    const actualDays = diffDaysInclusiveUTC(actualStart, actualEnd);
+
+    const bal = getAvailableBalance();
+    const cur = bal.cur ?? 0;
+    const add = bal.add;
+    const available = bal.total ?? (cur + add);
+
+    const balNew = available - eff.deductedEffective;
+
+    out.officialStartOut.textContent = fmtDateLine(officialStart);
+    out.officialEndOut.textContent = fmtDateLine(eff.officialEnd);
+    out.officialDaysOut.textContent = String(requestedDays);
+    out.fridaysInOfficialOut.textContent = String(eff.fridaysInOfficial);
+    out.officialHolidaysOut.textContent = String(eff.officialHolidayDays);
+    out.deductedDaysOut.textContent = String(eff.deductedEffective);
+
+    out.actualStartOut.textContent = fmtDateLine(actualStart);
+    out.actualEndOut.textContent = fmtDateLine(actualEnd);
+    out.actualDaysOut.textContent = String(actualDays);
+
+    out.balanceNowOut.textContent = String(available);
+    out.manualCreditOut.textContent = String(add);
+    out.balanceNewOut.textContent = String(balNew);
+
+    const shiftLabel = (shiftType === 'shifts') ? t('shift_shifts') : t('shift_morning');
+
+    if(currentLang === 'ar'){
+      out.summaryBox.value = [
+        `${t('sec_shift')}: ${shiftLabel}`,
+        `${t('res_available')}: ${available} (${t('lbl_balance').replace(' (يوم)','')} ${cur} + ${t('res_manual')} ${add})`,
+        `${t('res_official_title')}: ${fmtDate(officialStart)} → ${fmtDate(eff.officialEnd)} (${t('res_official_days')}: ${requestedDays})`,
+        `${t('res_fridays')}: ${eff.fridaysInOfficial}`,
+        `${t('res_holidays')}: ${eff.officialHolidayDays}`,
+        `${t('res_deducted')}: ${eff.deductedEffective}`,
+        `${t('res_actual_title')}: ${fmtDate(actualStart)} → ${fmtDate(actualEnd)} (${t('res_actual_days')}: ${actualDays})`,
+        `${t('res_new_balance')}: ${balNew}`
+      ].join('\n');
+    } else {
+      out.summaryBox.value = [
+        `Schedule: ${shiftLabel}`,
+        `Available balance: ${available} (current ${cur} + credit ${add})`,
+        `Official leave: ${fmtDate(officialStart)} to ${fmtDate(eff.officialEnd)} (requested days: ${requestedDays})`,
+        `Fridays within official range: ${eff.fridaysInOfficial}`,
+        `Official holidays within range: ${eff.officialHolidayDays}`,
+        `Deducted from balance: ${eff.deductedEffective}`,
+        `Actual leave: ${fmtDate(actualStart)} to ${fmtDate(actualEnd)} (actual days: ${actualDays})`,
+        `New balance: ${balNew}`
+      ].join('\n');
+    }
+  }
+
+  function adjustForMorningWeekendEnd(officialStart, days){
+    let d = days;
+    while(d > 1){
+      const end = addDaysUTC(officialStart, d - 1);
+      const dow = end.getUTCDay();
+      if(dow === 5){ d -= 1; continue; }
+      if(dow === 6){ d -= 2; continue; }
+      break;
+    }
+    return d;
+  }
+
+  function maxLeave(){
+    const bal = getAvailableBalance();
+    if(bal.cur === null){
+      currentBalanceEl.classList.add('invalid');
+      showAlert(t('alert_enter_balance_only'));
+      return;
+    }
+    if(!startDateEl.value){
+      showAlert(t('alert_enter_start_only'));
+      return;
+    }
+    const officialStart = parseDateYYYYMMDD(startDateEl.value);
+    if(!officialStart){
+      showAlert(t('alert_bad_start'));
+      return;
+    }
+
+    const available = bal.total;
+    const cap = (available ?? 0) + 2000;
+
+    let lo = 1;
+    let hi = cap;
+    let best = 0;
+
+    while(lo <= hi){
+      const mid = Math.floor((lo + hi) / 2);
+      const eff = computeEffectiveDeduction(officialStart, mid);
+      if(eff.deductedEffective <= available){
+        best = mid;
+        lo = mid + 1;
+      } else {
+        hi = mid - 1;
+      }
+    }
+
+    if(best <= 0){
+      showAlert(t('alert_no_solution'));
+      return;
+    }
+
+    if(getShiftType() === 'morning'){
+      best = adjustForMorningWeekendEnd(officialStart, best);
+    }
+
+    requestedDaysEl.value = String(best);
+    hideAlert();
+    softValidate();
+    calculate();
+  }
+
+  calcBtn.addEventListener('click', calculate);
+  maxBtn.addEventListener('click', maxLeave);
+
+  [currentBalanceEl, manualHolidayCreditEl, requestedDaysEl].forEach(el => el.addEventListener('input', () => {
+    softValidate();
+    if(startDateEl.value && requestedDaysEl.value && !calcBtn.disabled) calculate();
+  }));
+
+  [startHolidayDaysEl, endHolidayDaysEl].forEach(el => el.addEventListener('input', () => {
+    if(startDateEl.value && requestedDaysEl.value) { softValidate(); if(!calcBtn.disabled) calculate(); }
+  }));
+
+  document.querySelectorAll('input[name="shiftType"]').forEach(el => el.addEventListener('change', () => {
+    if(startDateEl.value && requestedDaysEl.value) { softValidate(); if(!calcBtn.disabled) calculate(); }
+  }));
+
+  resetBtn.addEventListener('click', () => {
+    startDateEl.value = '';
+    requestedDaysEl.value = '';
+    startWeekdayEl.textContent = '—';
+    currentBalanceEl.value = '';
+    manualHolidayCreditEl.value = '0';
+    startIsOfficialHolidayEl.checked = false;
+    endIsOfficialHolidayEl.checked = false;
+    syncHolidayInputs();
+    requestedDaysEl.classList.remove('invalid');
+    currentBalanceEl.classList.remove('invalid');
+    hideAlert();
+    calcBtn.disabled = false;
+    maxBtn.disabled = false;
+    clearOutputs();
+  });
+
+  copyBtn.addEventListener('click', async () => {
+    const txt = out.summaryBox.value || '';
+    if(!txt.trim()) return;
+    try{
+      await navigator.clipboard.writeText(txt);
+      copyBtn.textContent = t('copied');
+      setTimeout(()=> copyBtn.textContent = t('copy'), 1200);
+    }catch(e){
+      out.summaryBox.select();
+      document.execCommand('copy');
+      copyBtn.textContent = t('copied');
+      setTimeout(()=> copyBtn.textContent = t('copy'), 1200);
+    }
+  });
+
+  function t(key){
+    const v = translations[currentLang][key];
+    return v === undefined ? key : v;
+  }
+
+  langSelect.value = 'ar';
+  setLanguage('ar');
+</script>
+</body>
+</html>
